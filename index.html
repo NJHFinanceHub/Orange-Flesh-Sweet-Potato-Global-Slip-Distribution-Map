@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GIFT — Global OFSP Farmer Tracker</title>
+  <meta name="description" content="Interactive map tracking Orange Flesh Sweet Potato (OFSP) slip distribution to smallholder farmers worldwide. A Global Institute For Transformation initiative." />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- Leaflet MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    :root {
+      --gift-navy:       #1a2744;
+      --gift-navy-deep:  #0f1a2e;
+      --gift-amber:      #e8932f;
+      --gift-amber-light:#f5a623;
+      --gift-amber-glow: #ffc85c;
+      --gift-green:      #2d8a4e;
+      --gift-green-light:#4caf50;
+      --gift-green-muted:#3a7d52;
+      --gift-white:      #fafaf8;
+      --gift-cream:      #f5f1eb;
+      --gift-gray-100:   #e8e4de;
+      --gift-gray-300:   #b0a99e;
+      --gift-gray-500:   #7a736a;
+      --gift-gray-700:   #3d3830;
+      --gift-gray-900:   #1c1917;
+      --gift-red:        #c0392b;
+      --gift-blue:       #2980b9;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+      --space-lg: 24px; --space-xl: 32px; --space-2xl: 48px;
+      --shadow-sm:  0 1px 3px rgba(0,0,0,0.12);
+      --shadow-md:  0 4px 12px rgba(0,0,0,0.15);
+      --shadow-lg:  0 8px 32px rgba(0,0,0,0.2);
+      --shadow-glow: 0 0 20px rgba(232,147,47,0.3);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration: 0.35s;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%; width: 100%;
+      font-family: var(--font-body);
+      color: var(--gift-gray-900);
+      background: var(--gift-navy-deep);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* APP LAYOUT */
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      grid-template-columns: 360px 1fr;
+      height: 100vh; width: 100vw;
+    }
+
+    /* HEADER */
+    .header {
+      grid-column: 1 / -1;
+      background: var(--gift-navy);
+      border-bottom: 3px solid var(--gift-amber);
+      padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-lg); z-index: 1000; position: relative;
+    }
+    .header::after {
+      content: ''; position: absolute; bottom: -6px; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gift-amber), var(--gift-green), var(--gift-amber));
+      opacity: 0.5;
+    }
+    .header__brand { display: flex; align-items: center; gap: var(--space-md); }
+    .header__logo {
+      width: 52px; height: 52px; border-radius: 8px; object-fit: contain;
+      background: white; padding: 4px; box-shadow: var(--shadow-sm);
+    }
+    .header__title-group { display: flex; flex-direction: column; }
+    .header__title {
+      font-family: var(--font-display); font-size: 1.35rem; font-weight: 700;
+      color: var(--gift-white); letter-spacing: 0.02em; line-height: 1.2;
+    }
+    .header__subtitle {
+      font-size: 0.78rem; color: var(--gift-amber-light); font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px;
+    }
+    .header__stats-bar { display: flex; gap: var(--space-lg); align-items: center; }
+    .header__stat {
+      display: flex; flex-direction: column; align-items: center;
+      padding: var(--space-sm) var(--space-md);
+      background: rgba(255,255,255,0.06); border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08); min-width: 100px;
+      transition: all var(--duration) var(--ease-out);
+    }
+    .header__stat:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: var(--gift-amber); box-shadow: var(--shadow-glow);
+    }
+    .header__stat-value {
+      font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+      color: var(--gift-amber-glow); line-height: 1;
+    }
+    .header__stat-label {
+      font-size: 0.65rem; color: var(--gift-gray-300);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      font-weight: 500; margin-top: 3px;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--gift-white);
+      border-right: 1px solid var(--gift-gray-100);
+      overflow-y: auto; display: flex; flex-direction: column; z-index: 500;
+    }
+    .sidebar::-webkit-scrollbar { width: 5px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--gift-gray-100); border-radius: 4px; }
+    .sidebar__section { padding: var(--space-lg); border-bottom: 1px solid var(--gift-gray-100); }
+    .sidebar__section:last-child { border-bottom: none; }
+    .sidebar__heading {
+      font-family: var(--font-display); font-size: 0.85rem; font-weight: 600;
+      color: var(--gift-navy); text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm);
+    }
+    .sidebar__heading svg { width: 16px; height: 16px; opacity: 0.6; }
+
+    .search-box { position: relative; }
+    .search-box__input {
+      width: 100%; padding: 10px 14px 10px 38px;
+      border: 1.5px solid var(--gift-gray-100); border-radius: 10px;
+      font-family: var(--font-body); font-size: 0.85rem;
+      color: var(--gift-gray-900); background: white;
+      transition: all var(--duration) var(--ease-out); outline: none;
+    }
+    .search-box__input:focus { border-color: var(--gift-amber); box-shadow: 0 0 0 3px rgba(232,147,47,0.15); }
+    .search-box__input::placeholder { color: var(--gift-gray-300); }
+    .search-box__icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); width: 16px; height: 16px; color: var(--gift-gray-300);
+    }
+
+    .filter-chips { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border: 1.5px solid var(--gift-gray-100);
+      border-radius: 20px; font-size: 0.78rem; font-weight: 500;
+      color: var(--gift-gray-500); background: white;
+      cursor: pointer; transition: all var(--duration) var(--ease-out);
+      user-select: none; font-family: var(--font-body);
+    }
+    .filter-chip:hover { border-color: var(--gift-green-muted); color: var(--gift-green); background: rgba(45,138,78,0.05); }
+    .filter-chip--active { border-color: var(--gift-green); color: white; background: var(--gift-green); }
+    .filter-chip--active:hover { background: var(--gift-green-muted); color: white; }
+    .filter-chip__count { font-size: 0.7rem; background: rgba(0,0,0,0.1); padding: 1px 6px; border-radius: 10px; }
+    .filter-chip--active .filter-chip__count { background: rgba(255,255,255,0.25); }
+
+    .community-list { display: flex; flex-direction: column; gap: var(--space-sm); max-height: 360px; overflow-y: auto; }
+    .community-list::-webkit-scrollbar { width: 4px; }
+    .community-list::-webkit-scrollbar-track { background: transparent; }
+    .community-list::-webkit-scrollbar-thumb { background: var(--gift-gray-100); border-radius: 4px; }
+    .community-card {
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: var(--space-md); border: 1.5px solid var(--gift-gray-100);
+      border-radius: 12px; cursor: pointer;
+      transition: all var(--duration) var(--ease-out); background: white;
+    }
+    .community-card:hover { border-color: var(--gift-amber); box-shadow: var(--shadow-sm); transform: translateX(3px); }
+    .community-card__icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .community-card__info { flex: 1; min-width: 0; }
+    .community-card__name { font-weight: 600; font-size: 0.85rem; color: var(--gift-gray-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .community-card__meta { font-size: 0.72rem; color: var(--gift-gray-500); margin-top: 2px; }
+    .community-card__slips { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--gift-amber); flex-shrink: 0; }
+
+    .data-info { font-size: 0.72rem; color: var(--gift-gray-500); line-height: 1.5; }
+    .data-info a { color: var(--gift-amber); text-decoration: none; font-weight: 500; }
+    .data-info a:hover { text-decoration: underline; }
+    .last-updated { display: flex; align-items: center; gap: var(--space-xs); font-size: 0.72rem; color: var(--gift-gray-300); margin-top: var(--space-sm); }
+    .last-updated__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gift-green-light); animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* MAP */
+    .map-container { position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; background: #1a1a2e; z-index: 1; }
+
+    /* Leaflet overrides */
+    .leaflet-control-zoom a {
+      background: var(--gift-navy) !important; color: white !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+      font-weight: 600 !important; width: 36px !important; height: 36px !important;
+      line-height: 36px !important; font-size: 18px !important;
+    }
+    .leaflet-control-zoom a:hover { background: var(--gift-amber) !important; }
+    .leaflet-control-zoom { border: none !important; border-radius: 10px !important; overflow: hidden; box-shadow: var(--shadow-md) !important; }
+    .leaflet-control-attribution {
+      background: rgba(15,26,46,0.85) !important;
+      color: var(--gift-gray-300) !important; font-size: 10px !important;
+      backdrop-filter: blur(4px);
+    }
+    .leaflet-control-attribution a { color: var(--gift-amber-light) !important; }
+
+    /* Custom cluster markers */
+    .marker-cluster-small { background-color: rgba(45,138,78,0.5) !important; }
+    .marker-cluster-small div { background-color: rgba(45,138,78,0.85) !important; }
+    .marker-cluster-medium { background-color: rgba(232,147,47,0.5) !important; }
+    .marker-cluster-medium div { background-color: rgba(232,147,47,0.85) !important; }
+    .marker-cluster-large { background-color: rgba(192,57,43,0.5) !important; }
+    .marker-cluster-large div { background-color: rgba(192,57,43,0.85) !important; }
+    .marker-cluster div { font-family: var(--font-body) !important; font-weight: 700 !important; color: white !important; font-size: 13px !important; }
+
+    /* Custom popup */
+    .leaflet-popup-content-wrapper {
+      border-radius: 14px !important; padding: 0 !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important; overflow: hidden;
+    }
+    .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
+    .leaflet-popup-tip { display: none; }
+    .popup-card { font-family: var(--font-body); background: white; }
+    .popup-card__header { padding: 16px 20px 12px; border-bottom: 1px solid var(--gift-gray-100); }
+    .popup-card__community { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--gift-gray-900); margin-bottom: 4px; }
+    .popup-card__country { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 500; color: var(--gift-gray-500); }
+    .popup-card__country-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .popup-card__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .popup-card__stat { padding: 16px 20px; text-align: center; border-right: 1px solid var(--gift-gray-100); }
+    .popup-card__stat:last-child { border-right: none; }
+    .popup-card__stat-value { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; }
+    .popup-card__stat-label { font-size: 0.65rem; color: var(--gift-gray-500); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+    .popup-card__footer { padding: 10px 20px; background: var(--gift-cream); font-size: 0.7rem; color: var(--gift-gray-500); }
+
+    /* LOADING */
+    .loading-overlay {
+      position: fixed; inset: 0; background: var(--gift-navy-deep);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity 0.6s var(--ease-out), visibility 0.6s;
+    }
+    .loading-overlay--hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loading__spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--gift-amber);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .loading__text { margin-top: var(--space-md); font-size: 0.85rem; color: var(--gift-gray-300); letter-spacing: 0.05em; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-banner {
+      position: absolute; top: var(--space-md); left: 50%; transform: translateX(-50%);
+      background: var(--gift-red); color: white;
+      padding: var(--space-md) var(--space-lg); border-radius: 12px;
+      font-size: 0.82rem; box-shadow: var(--shadow-lg); z-index: 2000;
+      max-width: 500px; text-align: center; display: none;
+    }
+    .error-banner--visible { display: block; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+      .sidebar { max-height: 240px; border-right: none; border-bottom: 1px solid var(--gift-gray-100); }
+      .sidebar__section { padding: var(--space-md); }
+      .header__stats-bar { gap: var(--space-sm); }
+      .header__stat { min-width: 80px; padding: var(--space-xs) var(--space-sm); }
+      .header__stat-value { font-size: 1.15rem; }
+      .header__title { font-size: 1.1rem; }
+      .community-list { max-height: 120px; }
+    }
+    @media (max-width: 600px) {
+      .header { flex-direction: column; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); }
+      .header__stats-bar { width: 100%; justify-content: space-between; }
+      .header__stat { flex: 1; }
+    }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fadeInUp 0.5s var(--ease-out) forwards; }
+    .animate-in:nth-child(2) { animation-delay: 0.05s; }
+    .animate-in:nth-child(3) { animation-delay: 0.1s; }
+    .animate-in:nth-child(4) { animation-delay: 0.15s; }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading__spinner"></div>
+    <p class="loading__text">Loading farmer data…</p>
+  </div>
+
+  <div class="app">
+    <header class="header">
+      <div class="header__brand">
+        <img src="https://lirp.cdn-website.com/48d17e39/dms3rep/multi/opt/GIFT-287-1920w.jpg" alt="GIFT Logo" class="header__logo" onerror="this.style.display='none'" />
+        <div class="header__title-group">
+          <h1 class="header__title">Global OFSP Farmer Tracker</h1>
+          <p class="header__subtitle">Global Institute For Transformation</p>
+        </div>
+      </div>
+      <div class="header__stats-bar">
+        <div class="header__stat"><span class="header__stat-value" id="statCommunities">—</span><span class="header__stat-label">Communities</span></div>
+        <div class="header__stat"><span class="header__stat-value" id="statFarmers">—</span><span class="header__stat-label">Farmers</span></div>
+        <div class="header__stat"><span class="header__stat-value" id="statSlips">—</span><span class="header__stat-label">Slips Distributed</span></div>
+        <div class="header__stat"><span class="header__stat-value" id="statCountries">—</span><span class="header__stat-label">Countries</span></div>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="sidebar__section">
+        <div class="search-box">
+          <svg class="search-box__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="search-box__input" id="searchInput" placeholder="Search communities…" />
+        </div>
+      </div>
+      <div class="sidebar__section">
+        <h3 class="sidebar__heading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Countries
+        </h3>
+        <div class="filter-chips" id="countryFilters"></div>
+      </div>
+      <div class="sidebar__section" style="flex:1; min-height:0;">
+        <h3 class="sidebar__heading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Communities
+        </h3>
+        <div class="community-list" id="communityList"></div>
+      </div>
+      <div class="sidebar__section">
+        <h3 class="sidebar__heading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Data Source
+        </h3>
+        <p class="data-info">
+          Farmer data is sourced from a shared <a href="#" id="sheetLink" target="_blank">Google Sheet</a> and aggregated by community for privacy. Powered by <a href="https://leafletjs.com" target="_blank">Leaflet</a> + <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> — 100% free, no API keys.
+        </p>
+        <div class="last-updated"><span class="last-updated__dot"></span><span id="lastUpdated">Last refreshed: —</span></div>
+      </div>
+    </aside>
+
+    <main class="map-container">
+      <div id="map"></div>
+      <div class="error-banner" id="errorBanner"></div>
+    </main>
+  </div>
+
+  <script>
+    // =========================================================
+    // CONFIGURATION — Edit these for your deployment
+    // =========================================================
+    const CONFIG = {
+      // Published Google Sheet CSV URL
+      // Google Sheet → File → Share → Publish to web → CSV
+      googleSheetCsvUrl: '',
+
+      // Set false once your Google Sheet is connected
+      useDemoData: true,
+
+      // Map center [lat, lng] and zoom
+      mapCenter: [10, 20],
+      mapZoom: 3,
+
+      // Google Sheet edit link for sidebar
+      googleSheetUrl: '',
+
+      // Free tile layer — CartoDB Dark Matter (no key needed)
+      tileUrl: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      tileAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    };
+
+    // =========================================================
+    // DEMO DATA — Representative sample across GIFT countries
+    // =========================================================
+    const DEMO_DATA = [
+      { community: "Fondwa",         country: "Haiti",       lat: 18.4467, lon: -72.6342, farmerCount: 12, slipCount: 3600,  latestDate: "2025-08-15" },
+      { community: "Petit-Goâve",    country: "Haiti",       lat: 18.4313, lon: -72.8684, farmerCount: 8,  slipCount: 2400,  latestDate: "2025-09-01" },
+      { community: "Jacmel",         country: "Haiti",       lat: 18.2340, lon: -72.5346, farmerCount: 6,  slipCount: 1800,  latestDate: "2025-07-20" },
+      { community: "Léogâne",        country: "Haiti",       lat: 18.5113, lon: -72.6337, farmerCount: 10, slipCount: 3000,  latestDate: "2025-10-10" },
+      { community: "Les Cayes",      country: "Haiti",       lat: 18.1952, lon: -73.7508, farmerCount: 5,  slipCount: 1500,  latestDate: "2025-06-15" },
+      { community: "Lilongwe",       country: "Malawi",      lat: -13.9626, lon: 33.7741, farmerCount: 15, slipCount: 4500,  latestDate: "2025-09-20" },
+      { community: "Zomba",          country: "Malawi",      lat: -15.3856, lon: 35.3188, farmerCount: 9,  slipCount: 2700,  latestDate: "2025-08-10" },
+      { community: "Blantyre",       country: "Malawi",      lat: -15.7861, lon: 35.0058, farmerCount: 11, slipCount: 3300,  latestDate: "2025-10-01" },
+      { community: "Mzuzu",          country: "Malawi",      lat: -11.4619, lon: 34.0216, farmerCount: 7,  slipCount: 2100,  latestDate: "2025-07-25" },
+      { community: "Leyte",          country: "Philippines", lat: 10.4167, lon: 124.9500, farmerCount: 8,  slipCount: 2400,  latestDate: "2025-08-05" },
+      { community: "Samar",          country: "Philippines", lat: 11.5898, lon: 124.9583, farmerCount: 6,  slipCount: 1800,  latestDate: "2025-09-15" },
+      { community: "Cebu",           country: "Philippines", lat: 10.3157, lon: 123.8854, farmerCount: 10, slipCount: 3000,  latestDate: "2025-10-05" },
+      { community: "Abuja",          country: "Nigeria",     lat: 9.0579,  lon: 7.4951,   farmerCount: 14, slipCount: 4200,  latestDate: "2025-09-12" },
+      { community: "Jos",            country: "Nigeria",     lat: 9.8965,  lon: 8.8583,   farmerCount: 8,  slipCount: 2400,  latestDate: "2025-08-22" },
+      { community: "Odisha",         country: "India",       lat: 20.9517, lon: 85.0985,  farmerCount: 20, slipCount: 6000,  latestDate: "2025-10-08" },
+      { community: "Jharkhand",      country: "India",       lat: 23.6102, lon: 85.2799,  farmerCount: 12, slipCount: 3600,  latestDate: "2025-09-28" },
+      { community: "Bihar",          country: "India",       lat: 25.0961, lon: 85.3131,  farmerCount: 9,  slipCount: 2700,  latestDate: "2025-08-18" },
+    ];
+
+    // =========================================================
+    // COUNTRY COLORS
+    // =========================================================
+    const COUNTRY_COLORS = {
+      'Haiti':       '#e8932f',
+      'Malawi':      '#2d8a4e',
+      'Philippines': '#2980b9',
+      'Nigeria':     '#c0392b',
+      'India':       '#8e44ad',
+      'Ethiopia':    '#e67e22',
+      'Brazil':      '#27ae60',
+    };
+    function getHex(country) { return COUNTRY_COLORS[country] || '#7f8c8d'; }
+
+    // =========================================================
+    // CSV PARSER
+    // =========================================================
+    function parseCSVLine(line) {
+      const r = []; let c = ''; let q = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') q = !q;
+        else if (ch === ',' && !q) { r.push(c); c = ''; }
+        else c += ch;
+      }
+      r.push(c); return r;
+    }
+
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split('\n');
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
+      const find = (kw) => headers.findIndex(h => kw.some(k => h.includes(k)));
+      const col = {
+        lat: find(['latitude','lat']), lon: find(['longitude','lon','lng']),
+        date: find(['date','distributed']), slips: find(['slips','slip_count','number_of_slips']),
+        community: find(['community','village','location']), country: find(['country','nation']),
+      };
+
+      const farmers = [];
+      for (let i = 1; i < lines.length; i++) {
+        const v = parseCSVLine(lines[i]);
+        if (!v || v.length < 4) continue;
+        const lat = parseFloat(v[col.lat]), lon = parseFloat(v[col.lon]);
+        if (isNaN(lat) || isNaN(lon)) continue;
+        farmers.push({ lat, lon,
+          date: col.date >= 0 ? v[col.date]?.trim() : '',
+          slips: col.slips >= 0 ? parseInt(v[col.slips]) || 0 : 0,
+          community: col.community >= 0 ? v[col.community]?.trim() : 'Unknown',
+          country: col.country >= 0 ? v[col.country]?.trim() : 'Unknown',
+        });
+      }
+
+      // Aggregate by community (privacy layer)
+      const cMap = new Map();
+      farmers.forEach(f => {
+        const k = `${f.community}|${f.country}`;
+        if (!cMap.has(k)) cMap.set(k, { community: f.community, country: f.country, fc: 0, sc: 0, ld: f.date, lats: [], lons: [] });
+        const e = cMap.get(k);
+        e.fc++; e.sc += f.slips; e.lats.push(f.lat); e.lons.push(f.lon);
+        if (f.date > e.ld) e.ld = f.date;
+      });
+
+      return Array.from(cMap.values()).map(c => ({
+        community: c.community, country: c.country,
+        lat: c.lats.reduce((a,b) => a+b, 0) / c.lats.length,
+        lon: c.lons.reduce((a,b) => a+b, 0) / c.lons.length,
+        farmerCount: c.fc, slipCount: c.sc, latestDate: c.ld,
+      }));
+    }
+
+    // =========================================================
+    // LOAD DATA
+    // =========================================================
+    async function loadData() {
+      if (CONFIG.googleSheetCsvUrl) {
+        try {
+          const r = await fetch(CONFIG.googleSheetCsvUrl);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const d = parseCSV(await r.text());
+          if (d.length > 0) return d;
+        } catch (e) { console.warn('Sheet load failed:', e); showError('Could not load live data. Showing demo data.'); }
+      }
+      return CONFIG.useDemoData ? DEMO_DATA : [];
+    }
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+    function showError(msg) {
+      const b = document.getElementById('errorBanner');
+      b.textContent = msg; b.classList.add('error-banner--visible');
+      setTimeout(() => b.classList.remove('error-banner--visible'), 8000);
+    }
+    function fmt(n) {
+      if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
+      if (n >= 1000) return (n/1000).toFixed(1)+'K';
+      return n.toLocaleString();
+    }
+    function updateStats(data) {
+      document.getElementById('statCommunities').textContent = data.length;
+      document.getElementById('statFarmers').textContent = fmt(data.reduce((s,d) => s+d.farmerCount, 0));
+      document.getElementById('statSlips').textContent = fmt(data.reduce((s,d) => s+d.slipCount, 0));
+      document.getElementById('statCountries').textContent = new Set(data.map(d => d.country)).size;
+      document.getElementById('lastUpdated').textContent = `Last refreshed: ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}`;
+    }
+
+    // =========================================================
+    // MARKER ICON FACTORY
+    // =========================================================
+    function makeIcon(country, slipCount, maxSlips) {
+      const hex = getHex(country);
+      const r = 10 + ((slipCount / Math.max(maxSlips,1)) * 16);
+      const s = Math.round(r * 2);
+      return L.divIcon({
+        html: `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="${s/2}" cy="${s/2}" r="${s/2-2}" fill="${hex}" fill-opacity="0.85" stroke="white" stroke-width="2.5"/>
+          <circle cx="${s/2}" cy="${s/2}" r="${s/2-2}" fill="none" stroke="${hex}" stroke-width="1" stroke-opacity="0.35">
+            <animate attributeName="r" from="${s/2-2}" to="${s/2+8}" dur="2.5s" repeatCount="indefinite"/>
+            <animate attributeName="stroke-opacity" from="0.35" to="0" dur="2.5s" repeatCount="indefinite"/>
+          </circle></svg>`,
+        className: '', iconSize: [s,s], iconAnchor: [s/2,s/2], popupAnchor: [0,-s/2],
+      });
+    }
+
+    // =========================================================
+    // POPUP HTML
+    // =========================================================
+    function popupHTML(d) {
+      const hex = getHex(d.country);
+      const date = d.latestDate ? new Date(d.latestDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+      return `<div class="popup-card">
+        <div class="popup-card__header">
+          <div class="popup-card__community">${d.community}</div>
+          <div class="popup-card__country"><span class="popup-card__country-dot" style="background:${hex}"></span>${d.country}</div>
+        </div>
+        <div class="popup-card__stats">
+          <div class="popup-card__stat"><div class="popup-card__stat-value" style="color:var(--gift-amber)">${d.farmerCount}</div><div class="popup-card__stat-label">Farmers</div></div>
+          <div class="popup-card__stat"><div class="popup-card__stat-value" style="color:var(--gift-green)">${d.slipCount.toLocaleString()}</div><div class="popup-card__stat-label">Slips</div></div>
+        </div>
+        <div class="popup-card__footer">Latest distribution: ${date}</div>
+      </div>`;
+    }
+
+    // =========================================================
+    // MAIN APP
+    // =========================================================
+    let map, clusterGroup, allData = [], activeCountries = new Set();
+
+    async function init() {
+      map = L.map('map', { center: CONFIG.mapCenter, zoom: CONFIG.mapZoom, minZoom: 2, maxZoom: 18, zoomControl: true });
+
+      L.tileLayer(CONFIG.tileUrl, { attribution: CONFIG.tileAttribution, subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+
+      allData = await loadData();
+      if (!allData.length) { showError('No data. Configure Google Sheet URL.'); document.getElementById('loadingOverlay').classList.add('loading-overlay--hidden'); return; }
+
+      activeCountries = new Set(allData.map(d => d.country));
+      updateStats(allData);
+      buildCountryFilters(allData);
+      buildCommunityList(allData);
+      renderMarkers(allData);
+      if (CONFIG.googleSheetUrl) document.getElementById('sheetLink').href = CONFIG.googleSheetUrl;
+
+      document.getElementById('searchInput').addEventListener('input', e => {
+        const q = e.target.value.toLowerCase().trim();
+        buildCommunityList(allData.filter(d => activeCountries.has(d.country)).filter(d => !q || d.community.toLowerCase().includes(q) || d.country.toLowerCase().includes(q)));
+      });
+
+      document.getElementById('loadingOverlay').classList.add('loading-overlay--hidden');
+    }
+
+    // =========================================================
+    // RENDER MARKERS WITH CLUSTERING
+    // =========================================================
+    function renderMarkers(data) {
+      if (clusterGroup) map.removeLayer(clusterGroup);
+      const filtered = data.filter(d => activeCountries.has(d.country));
+      const maxSlips = Math.max(...filtered.map(d => d.slipCount), 1);
+
+      clusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true,
+        iconCreateFunction(cluster) {
+          const n = cluster.getChildCount();
+          let sz = 40, cls = 'small';
+          if (n >= 10) { sz = 56; cls = 'large'; } else if (n >= 5) { sz = 48; cls = 'medium'; }
+          return L.divIcon({ html: `<div>${n}</div>`, className: `marker-cluster marker-cluster-${cls}`, iconSize: L.point(sz,sz) });
+        },
+      });
+
+      filtered.forEach(d => {
+        const m = L.marker([d.lat, d.lon], { icon: makeIcon(d.country, d.slipCount, maxSlips) });
+        m.bindPopup(popupHTML(d), { maxWidth: 300, closeButton: true, offset: [0,-5] });
+        m._data = d;
+        clusterGroup.addLayer(m);
+      });
+      map.addLayer(clusterGroup);
+    }
+
+    // =========================================================
+    // COUNTRY FILTERS
+    // =========================================================
+    function buildCountryFilters(data) {
+      const counts = {}; data.forEach(d => counts[d.country] = (counts[d.country]||0) + d.farmerCount);
+      const el = document.getElementById('countryFilters'); el.innerHTML = '';
+
+      const allChip = mkChip('All', data.reduce((s,d)=>s+d.farmerCount,0), true);
+      allChip.onclick = () => { activeCountries = new Set(data.map(d=>d.country)); refreshAll(); map.flyTo(CONFIG.mapCenter, CONFIG.mapZoom, {duration:0.8}); };
+      el.appendChild(allChip);
+
+      Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([c,n]) => {
+        const chip = mkChip(c, n, activeCountries.has(c));
+        chip.onclick = () => {
+          if (activeCountries.has(c) && activeCountries.size > 1) activeCountries.delete(c);
+          else if (!activeCountries.has(c)) activeCountries.add(c);
+          else activeCountries = new Set(data.map(d=>d.country));
+          refreshAll(); zoomToFiltered();
+        };
+        el.appendChild(chip);
+      });
+    }
+
+    function mkChip(label, count, active) {
+      const b = document.createElement('button');
+      b.className = `filter-chip${active?' filter-chip--active':''}`;
+      b.innerHTML = `${label!=='All'?`<span style="width:8px;height:8px;border-radius:50%;background:${getHex(label)};flex-shrink:0"></span>`:''}${label}<span class="filter-chip__count">${count}</span>`;
+      b.dataset.country = label; return b;
+    }
+
+    function refreshAll() {
+      const all = new Set(allData.map(d=>d.country));
+      document.querySelectorAll('.filter-chip').forEach(c => {
+        const cn = c.dataset.country;
+        c.classList.toggle('filter-chip--active', cn==='All' ? activeCountries.size===all.size : activeCountries.has(cn));
+      });
+      const f = allData.filter(d=>activeCountries.has(d.country));
+      updateStats(f); renderMarkers(allData); buildCommunityList(f);
+      document.getElementById('searchInput').value = '';
+    }
+
+    function zoomToFiltered() {
+      const f = allData.filter(d=>activeCountries.has(d.country));
+      if (!f.length) return;
+      if (f.length===1) { map.flyTo([f[0].lat, f[0].lon], 8, {duration:0.8}); return; }
+      map.flyToBounds(L.latLngBounds(f.map(d=>[d.lat,d.lon])).pad(0.15), {duration:0.8});
+    }
+
+    // =========================================================
+    // COMMUNITY LIST
+    // =========================================================
+    function buildCommunityList(data) {
+      const el = document.getElementById('communityList'); el.innerHTML = '';
+      [...data].sort((a,b)=>b.slipCount-a.slipCount).forEach(d => {
+        const card = document.createElement('div');
+        card.className = 'community-card animate-in';
+        card.innerHTML = `
+          <div class="community-card__icon" style="background:linear-gradient(135deg,${getHex(d.country)},${getHex(d.country)}cc)">🌱</div>
+          <div class="community-card__info"><div class="community-card__name">${d.community}</div><div class="community-card__meta">${d.country} · ${d.farmerCount} farmer${d.farmerCount!==1?'s':''}</div></div>
+          <div class="community-card__slips">${fmt(d.slipCount)}</div>`;
+        card.onclick = () => {
+          map.flyTo([d.lat, d.lon], 11, {duration:0.8});
+          setTimeout(() => {
+            clusterGroup.eachLayer(layer => {
+              if (layer._data && layer._data.community === d.community && layer._data.country === d.country) layer.openPopup();
+            });
+          }, 900);
+        };
+        el.appendChild(card);
+      });
+    }
+
+    // =========================================================
+    // BOOT
+    // =========================================================
+    init();
+  </script>
+</body>
+</html>

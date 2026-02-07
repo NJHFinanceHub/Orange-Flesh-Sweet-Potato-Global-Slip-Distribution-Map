@@ -1,0 +1,15 @@
+farmer_name,gender,latitude,longitude,date_distributed,slips_count,community,country
+Jean-Baptiste Pierre,M,18.4467,-72.6342,2025-08-15,300,Fondwa,Haiti
+Marie Josèphe Théodore,F,18.4472,-72.6338,2025-08-15,250,Fondwa,Haiti
+André Michel Joseph,M,18.4460,-72.6350,2025-08-20,350,Fondwa,Haiti
+Rose-Marie Cheristil,F,18.4313,-72.8684,2025-09-01,300,Petit-Goâve,Haiti
+Emmanuel François,M,18.4320,-72.8690,2025-09-01,275,Petit-Goâve,Haiti
+Chimwemwe Banda,M,-13.9626,33.7741,2025-09-20,300,Lilongwe,Malawi
+Tamala Phiri,F,-13.9630,33.7745,2025-09-20,350,Lilongwe,Malawi
+Kondwani Mwale,M,-13.9620,33.7735,2025-09-25,250,Lilongwe,Malawi
+Grace Chikondi,F,-15.3856,35.3188,2025-08-10,300,Zomba,Malawi
+Maria Santos,F,10.4167,124.9500,2025-08-05,300,Leyte,Philippines
+Juan dela Cruz,M,10.4170,124.9505,2025-08-05,275,Leyte,Philippines
+Adebayo Ogundimu,M,9.0579,7.4951,2025-09-12,350,Abuja,Nigeria
+Priya Sharma,F,20.9517,85.0985,2025-10-08,300,Odisha,India
+Ravi Kumar,M,20.9520,85.0990,2025-10-08,275,Odisha,India
