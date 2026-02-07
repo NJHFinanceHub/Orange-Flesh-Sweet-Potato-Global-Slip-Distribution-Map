@@ -6,7 +6,7 @@ An interactive GIS tracking system that maps Orange Flesh Sweet Potato (OFSP) sl
 
 ## Features
 
-- **Interactive ArcGIS Map** — Smooth pan/zoom with dark basemap optimized for data visualization
+- **Interactive Leaflet + OpenStreetMap Map** — Smooth pan/zoom with dark basemap optimized for data visualization
 - **Google Sheets Integration** — Live data pull from a published Google Sheet (no backend required)
 - **Privacy-First Design** — Individual farmer data is aggregated by community; donors see location + slip counts only
 - **Auto-Generated Farmer IDs** — Sheet formulas automatically assign unique IDs (GIFT-0001, GIFT-0002, etc.)
