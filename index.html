@@ -419,6 +419,22 @@
     };
     function getHex(country) { return COUNTRY_COLORS[country] || '#7f8c8d'; }
 
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function isValidDateYmd(value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      const [year, month, day] = value.split('-').map(Number);
+      const dt = new Date(Date.UTC(year, month - 1, day));
+      return dt.getUTCFullYear() === year && dt.getUTCMonth() === month - 1 && dt.getUTCDate() === day;
+    }
+
     // =========================================================
     // CSV PARSER
     // =========================================================
@@ -449,13 +465,27 @@
         const v = parseCSVLine(lines[i]);
         if (!v || v.length < 4) continue;
         const lat = parseFloat(v[col.lat]), lon = parseFloat(v[col.lon]);
-        if (isNaN(lat) || isNaN(lon)) continue;
-        farmers.push({ lat, lon,
-          date: col.date >= 0 ? v[col.date]?.trim() : '',
-          slips: col.slips >= 0 ? parseInt(v[col.slips]) || 0 : 0,
-          community: col.community >= 0 ? v[col.community]?.trim() : 'Unknown',
-          country: col.country >= 0 ? v[col.country]?.trim() : 'Unknown',
-        });
+        if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+          console.warn(`Row ${i}: invalid GPS coordinates (lat=${v[col.lat]}, lon=${v[col.lon]}), skipping`);
+          continue;
+        }
+        const dateVal = col.date >= 0 ? v[col.date]?.trim() : '';
+        if (dateVal && !isValidDateYmd(dateVal)) {
+          console.warn(`Row ${i}: invalid date "${dateVal}", skipping`);
+          continue;
+        }
+        const slipsVal = col.slips >= 0 ? parseInt(v[col.slips]) : 0;
+        if (col.slips >= 0 && (isNaN(slipsVal) || slipsVal <= 0)) {
+          console.warn(`Row ${i}: invalid slip count "${v[col.slips]}", skipping`);
+          continue;
+        }
+        const community = col.community >= 0 ? v[col.community]?.trim() : 'Unknown';
+        const country = col.country >= 0 ? v[col.country]?.trim() : 'Unknown';
+        if (!community || !country) {
+          console.warn(`Row ${i}: missing community or country, skipping`);
+          continue;
+        }
+        farmers.push({ lat, lon, date: dateVal, slips: slipsVal || 0, community, country });
       }
 
       // Aggregate by community (privacy layer)
@@ -481,12 +511,20 @@
     // =========================================================
     async function loadData() {
       if (CONFIG.googleSheetCsvUrl) {
-        try {
-          const r = await fetch(CONFIG.googleSheetCsvUrl);
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          const d = parseCSV(await r.text());
-          if (d.length > 0) return d;
-        } catch (e) { console.warn('Sheet load failed:', e); showError('Could not load live data. Showing demo data.'); }
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY = 2000;
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+          try {
+            const r = await fetch(CONFIG.googleSheetCsvUrl);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const d = parseCSV(await r.text());
+            if (d.length > 0) return d;
+          } catch (e) {
+            console.warn(`Sheet load attempt ${attempt}/${MAX_RETRIES} failed:`, e);
+            if (attempt < MAX_RETRIES) await new Promise(res => setTimeout(res, RETRY_DELAY));
+          }
+        }
+        showError('Could not load live data after 3 attempts. Showing demo data.');
       }
       return CONFIG.useDemoData ? DEMO_DATA : [];
     }
@@ -538,8 +576,8 @@
       const date = d.latestDate ? new Date(d.latestDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
       return `<div class="popup-card">
         <div class="popup-card__header">
-          <div class="popup-card__community">${d.community}</div>
-          <div class="popup-card__country"><span class="popup-card__country-dot" style="background:${hex}"></span>${d.country}</div>
+          <div class="popup-card__community">${escapeHtml(d.community)}</div>
+          <div class="popup-card__country"><span class="popup-card__country-dot" style="background:${hex}"></span>${escapeHtml(d.country)}</div>
         </div>
         <div class="popup-card__stats">
           <div class="popup-card__stat"><div class="popup-card__stat-value" style="color:var(--gift-amber)">${d.farmerCount}</div><div class="popup-card__stat-label">Farmers</div></div>
@@ -630,7 +668,7 @@
     function mkChip(label, count, active) {
       const b = document.createElement('button');
       b.className = `filter-chip${active?' filter-chip--active':''}`;
-      b.innerHTML = `${label!=='All'?`<span style="width:8px;height:8px;border-radius:50%;background:${getHex(label)};flex-shrink:0"></span>`:''}${label}<span class="filter-chip__count">${count}</span>`;
+      b.innerHTML = `${label!=='All'?`<span style="width:8px;height:8px;border-radius:50%;background:${getHex(label)};flex-shrink:0"></span>`:''}${escapeHtml(label)}<span class="filter-chip__count">${count}</span>`;
       b.dataset.country = label; return b;
     }
 
@@ -662,7 +700,7 @@
         card.className = 'community-card animate-in';
         card.innerHTML = `
           <div class="community-card__icon" style="background:linear-gradient(135deg,${getHex(d.country)},${getHex(d.country)}cc)">🌱</div>
-          <div class="community-card__info"><div class="community-card__name">${d.community}</div><div class="community-card__meta">${d.country} · ${d.farmerCount} farmer${d.farmerCount!==1?'s':''}</div></div>
+          <div class="community-card__info"><div class="community-card__name">${escapeHtml(d.community)}</div><div class="community-card__meta">${escapeHtml(d.country)} · ${d.farmerCount} farmer${d.farmerCount!==1?'s':''}</div></div>
           <div class="community-card__slips">${fmt(d.slipCount)}</div>`;
         card.onclick = () => {
           map.flyTo([d.lat, d.lon], 11, {duration:0.8});
