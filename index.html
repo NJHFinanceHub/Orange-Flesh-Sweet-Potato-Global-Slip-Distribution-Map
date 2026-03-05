@@ -400,16 +400,7 @@
       font-family: var(--font-body) !important; font-weight: 700 !important;
       color: white !important; font-size: 13px !important;
     }
-    .marker-cluster {
-      transition: transform 0.2s var(--ease-out) !important;
-    }
-    .marker-cluster:hover {
-      transform: scale(1.12) !important;
-    }
-
-    /* Custom marker hover */
-    .gift-marker { transition: transform 0.2s var(--ease-out); }
-    .gift-marker:hover { transform: scale(1.2); }
+    /* Smooth cluster/marker appearance — no scale on hover to prevent jitter */
 
     /* Custom popup */
     .leaflet-popup-content-wrapper {
@@ -895,8 +886,7 @@
       const s = Math.round(r * 2);
       const innerR = s/2 - 3;
       return L.divIcon({
-        html: `<div class="gift-marker" style="width:${s}px;height:${s}px;">
-          <svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg">
+        html: `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <filter id="shadow-${s}" x="-20%" y="-20%" width="140%" height="140%">
                 <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="${hex}" flood-opacity="0.3"/>
@@ -906,7 +896,7 @@
             <circle cx="${s/2}" cy="${s/2}" r="${innerR + 4}" fill="none" stroke="${hex}" stroke-width="1" stroke-opacity="0" stroke-dasharray="3 2">
               <animate attributeName="stroke-opacity" values="0;0.3;0" dur="3s" repeatCount="indefinite"/>
             </circle>
-          </svg></div>`,
+          </svg>`,
         className: '', iconSize: [s,s], iconAnchor: [s/2,s/2], popupAnchor: [0,-s/2],
       });
     }
