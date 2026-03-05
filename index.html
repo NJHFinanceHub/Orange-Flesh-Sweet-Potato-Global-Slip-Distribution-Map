@@ -260,7 +260,7 @@
     .community-card__icon {
       width: 40px; height: 40px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 1.1rem; flex-shrink: 0;
+      color: white; font-size: 1.4rem; flex-shrink: 0;
     }
     .community-card__info { flex: 1; min-width: 0; }
     .community-card__name {
@@ -276,23 +276,33 @@
     .community-card__meta { font-size: 0.72rem; color: var(--gift-gray-500); margin-top: 2px; }
     .community-card__slips { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--gift-amber); flex-shrink: 0; }
 
-    .data-info { font-size: 0.72rem; color: var(--gift-gray-500); line-height: 1.5; }
-    .data-info a { color: var(--gift-amber); text-decoration: none; font-weight: 500; }
-    .data-info a:hover { text-decoration: underline; }
-    .last-updated { display: flex; align-items: center; gap: var(--space-xs); font-size: 0.72rem; color: var(--gift-gray-300); margin-top: var(--space-sm); }
     .last-updated__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gift-green-light); animation: pulse-dot 2s ease-in-out infinite; }
     @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    /* EXPORT BUTTON */
-    .btn-export {
-      width: 100%; padding: 10px; border-radius: 10px; border: 1.5px solid var(--gift-gray-100);
-      background: white; color: var(--gift-gray-700); font-size: 0.78rem;
-      font-family: var(--font-body); font-weight: 600; cursor: pointer;
-      transition: all var(--duration) var(--ease-out); margin-top: var(--space-md);
-      display: flex; align-items: center; justify-content: center; gap: var(--space-sm);
+    /* SIDEBAR FOOTER */
+    .sidebar__footer {
+      display: flex; align-items: center; gap: var(--space-sm);
+      padding: 8px var(--space-md); border-top: 1px solid var(--gift-gray-100);
+      font-size: 0.65rem; color: var(--gift-gray-300); flex-shrink: 0;
+      background: var(--gift-cream);
     }
-    .btn-export:hover { border-color: var(--gift-amber); color: var(--gift-amber); background: rgba(232,147,47,0.04); }
-    .btn-export--copied { border-color: var(--gift-green); color: var(--gift-green); background: rgba(45,138,78,0.06); }
+    .sidebar__footer-left {
+      display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sidebar__footer-link {
+      color: var(--gift-amber); text-decoration: none; font-weight: 500;
+      font-size: 0.65rem;
+    }
+    .sidebar__footer-link:hover { text-decoration: underline; }
+    .btn-export-sm {
+      padding: 3px 10px; border-radius: 6px; border: 1px solid var(--gift-gray-100);
+      background: white; color: var(--gift-gray-500); font-size: 0.62rem;
+      font-family: var(--font-body); font-weight: 600; cursor: pointer;
+      transition: all var(--duration) var(--ease-out);
+    }
+    .btn-export-sm:hover { border-color: var(--gift-amber); color: var(--gift-amber); }
+    .btn-export-sm--copied { border-color: var(--gift-green); color: var(--gift-green); }
 
     /* MAP */
     .map-container {
@@ -594,19 +604,10 @@
         </h3>
         <div class="community-list" id="communityList"></div>
       </div>
-      <div class="sidebar__section" style="flex-shrink:0;">
-        <h3 class="sidebar__heading">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Data Source
-        </h3>
-        <p class="data-info">
-          Farmer data is sourced from a shared <a href="#" id="sheetLink" target="_blank">Google Sheet</a> and aggregated by community for privacy. Powered by <a href="https://leafletjs.com" target="_blank">Leaflet</a> + <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>.
-        </p>
-        <div class="last-updated"><span class="last-updated__dot"></span><span id="lastUpdated">Last refreshed: --</span></div>
-        <button class="btn-export" id="btnExport">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Export Summary
-        </button>
+      <div class="sidebar__footer">
+        <span class="sidebar__footer-left"><span class="last-updated__dot"></span><span id="lastUpdated">--</span></span>
+        <button class="btn-export-sm" id="btnExport" title="Copy summary to clipboard">Export</button>
+        <a href="#" id="sheetLink" target="_blank" class="sidebar__footer-link">Sheet</a>
       </div>
     </aside>
 
@@ -642,7 +643,7 @@
       useDemoData: false,
       mapCenter: [10, 20],
       mapZoom: 3,
-      googleSheetUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTdBMj7yfl1QnVVmivY_HnSFpk2Xq7-AzbhVhmbS43uf9eZypKACUtGzwubRiKlnpawbo1ER-2n_OAH/edit',
+      googleSheetUrl: 'https://docs.google.com/spreadsheets/d/18QzWJQ_cK2N7N-Emy_LfljPV7kV0fDaNgBiYFxiqom4/edit?gid=0#gid=0',
       // OpenStreetMap standard — English labels for continents/regions
       tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       tileAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -1016,12 +1017,12 @@
 
       navigator.clipboard.writeText(summary).then(() => {
         const btn = document.getElementById('btnExport');
-        btn.classList.add('btn-export--copied');
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        btn.classList.add('btn-export-sm--copied');
+        btn.textContent = 'Copied!';
         showToast('Summary copied to clipboard');
         setTimeout(() => {
-          btn.classList.remove('btn-export--copied');
-          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Export Summary';
+          btn.classList.remove('btn-export-sm--copied');
+          btn.textContent = 'Export';
         }, 2500);
       }).catch(() => {
         showToast('Could not copy to clipboard');
