@@ -949,22 +949,6 @@
 
       L.tileLayer(CONFIG.tileUrl, { attribution: CONFIG.tileAttribution, subdomains: 'abcd', maxZoom: 19 }).addTo(map);
 
-      allData = await loadData();
-      if (!allData.length) { showError('No data. Configure Google Sheet URL.'); document.getElementById('loadingOverlay').classList.add('loading-overlay--hidden'); return; }
-
-      activeCountries = new Set(allData.map(d => d.country));
-      updateStats(allData, true);
-      buildCountryFilters(allData);
-      buildCommunityList(allData);
-      renderMarkers(allData);
-      buildLegend(allData);
-      if (CONFIG.googleSheetUrl) document.getElementById('sheetLink').href = CONFIG.googleSheetUrl;
-
-      document.getElementById('searchInput').addEventListener('input', e => {
-        const q = e.target.value.toLowerCase().trim();
-        buildCommunityList(allData.filter(d => activeCountries.has(d.country)).filter(d => !q || d.community.toLowerCase().includes(q) || d.country.toLowerCase().includes(q)));
-      });
-
       // Presentation mode
       document.getElementById('btnPresent').addEventListener('click', togglePresent);
       document.addEventListener('keydown', e => {
@@ -982,9 +966,29 @@
         btn.textContent = legend.classList.contains('map-legend--collapsed') ? '+' : '-';
       });
 
-      // Hide loading, reveal app
+      document.getElementById('searchInput').addEventListener('input', e => {
+        const q = e.target.value.toLowerCase().trim();
+        buildCommunityList(allData.filter(d => activeCountries.has(d.country)).filter(d => !q || d.community.toLowerCase().includes(q) || d.country.toLowerCase().includes(q)));
+      });
+
+      allData = await loadData();
+
+      // Always reveal the app — even if data is empty
       document.getElementById('loadingOverlay').classList.add('loading-overlay--hidden');
       setTimeout(() => document.getElementById('app').classList.add('app--visible'), 100);
+
+      if (!allData.length) {
+        showError('No data loaded. Using demo data.');
+        allData = DEMO_DATA;
+      }
+
+      activeCountries = new Set(allData.map(d => d.country));
+      updateStats(allData, true);
+      buildCountryFilters(allData);
+      buildCommunityList(allData);
+      renderMarkers(allData);
+      buildLegend(allData);
+      if (CONFIG.googleSheetUrl) document.getElementById('sheetLink').href = CONFIG.googleSheetUrl;
     }
 
     function togglePresent() {
