@@ -433,6 +433,10 @@
       text-decoration: none; font-size: 0.7rem;
     }
     .popup-card__zoom:hover { text-decoration: underline; }
+    .popup-card__timeline { padding: 10px 20px 8px; border-top: 1px solid var(--gift-gray-100); }
+    .popup-card__timeline-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gift-gray-500); margin-bottom: 6px; }
+    .popup-card__timeline-svg { display: block; width: 100%; height: 48px; }
+    .popup-card__timeline-dates { display: flex; justify-content: space-between; font-size: 0.58rem; color: var(--gift-gray-400); margin-top: 2px; }
 
     /* LOADING */
     .loading-overlay {
@@ -644,23 +648,35 @@
     // DEMO DATA
     // =========================================================
     const DEMO_DATA = [
-      { community: "Fondwa",         country: "Haiti",       lat: 18.4467, lon: -72.6342, farmerCount: 12, slipCount: 3600,  latestDate: "2025-08-15" },
-      { community: "Petit-Goave",    country: "Haiti",       lat: 18.4313, lon: -72.8684, farmerCount: 8,  slipCount: 2400,  latestDate: "2025-09-01" },
-      { community: "Jacmel",         country: "Haiti",       lat: 18.2340, lon: -72.5346, farmerCount: 6,  slipCount: 1800,  latestDate: "2025-07-20" },
-      { community: "Leogane",        country: "Haiti",       lat: 18.5113, lon: -72.6337, farmerCount: 10, slipCount: 3000,  latestDate: "2025-10-10" },
-      { community: "Les Cayes",      country: "Haiti",       lat: 18.1952, lon: -73.7508, farmerCount: 5,  slipCount: 1500,  latestDate: "2025-06-15" },
-      { community: "Lilongwe",       country: "Malawi",      lat: -13.9626, lon: 33.7741, farmerCount: 15, slipCount: 4500,  latestDate: "2025-09-20" },
-      { community: "Zomba",          country: "Malawi",      lat: -15.3856, lon: 35.3188, farmerCount: 9,  slipCount: 2700,  latestDate: "2025-08-10" },
-      { community: "Blantyre",       country: "Malawi",      lat: -15.7861, lon: 35.0058, farmerCount: 11, slipCount: 3300,  latestDate: "2025-10-01" },
-      { community: "Mzuzu",          country: "Malawi",      lat: -11.4619, lon: 34.0216, farmerCount: 7,  slipCount: 2100,  latestDate: "2025-07-25" },
-      { community: "Leyte",          country: "Philippines", lat: 10.4167, lon: 124.9500, farmerCount: 8,  slipCount: 2400,  latestDate: "2025-08-05" },
-      { community: "Samar",          country: "Philippines", lat: 11.5898, lon: 124.9583, farmerCount: 6,  slipCount: 1800,  latestDate: "2025-09-15" },
-      { community: "Cebu",           country: "Philippines", lat: 10.3157, lon: 123.8854, farmerCount: 10, slipCount: 3000,  latestDate: "2025-10-05" },
-      { community: "Abuja",          country: "Nigeria",     lat: 9.0579,  lon: 7.4951,   farmerCount: 14, slipCount: 4200,  latestDate: "2025-09-12" },
-      { community: "Jos",            country: "Nigeria",     lat: 9.8965,  lon: 8.8583,   farmerCount: 8,  slipCount: 2400,  latestDate: "2025-08-22" },
-      { community: "Odisha",         country: "India",       lat: 20.9517, lon: 85.0985,  farmerCount: 20, slipCount: 6000,  latestDate: "2025-10-08" },
-      { community: "Jharkhand",      country: "India",       lat: 23.6102, lon: 85.2799,  farmerCount: 12, slipCount: 3600,  latestDate: "2025-09-28" },
-      { community: "Bihar",          country: "India",       lat: 25.0961, lon: 85.3131,  farmerCount: 9,  slipCount: 2700,  latestDate: "2025-08-18" },
+      { community: "Fondwa",         country: "Haiti",       lat: 18.4467, lon: -72.6342, farmerCount: 12, slipCount: 3600,  latestDate: "2025-08-15",
+        timeline: [{date:"2025-05-10",slips:600},{date:"2025-06-12",slips:900},{date:"2025-07-18",slips:800},{date:"2025-08-15",slips:1300}] },
+      { community: "Petit-Goave",    country: "Haiti",       lat: 18.4313, lon: -72.8684, farmerCount: 8,  slipCount: 2400,  latestDate: "2025-09-01",
+        timeline: [{date:"2025-07-01",slips:800},{date:"2025-08-05",slips:700},{date:"2025-09-01",slips:900}] },
+      { community: "Jacmel",         country: "Haiti",       lat: 18.2340, lon: -72.5346, farmerCount: 6,  slipCount: 1800,  latestDate: "2025-07-20", timeline: null },
+      { community: "Leogane",        country: "Haiti",       lat: 18.5113, lon: -72.6337, farmerCount: 10, slipCount: 3000,  latestDate: "2025-10-10",
+        timeline: [{date:"2025-06-15",slips:500},{date:"2025-07-20",slips:700},{date:"2025-08-25",slips:800},{date:"2025-09-18",slips:600},{date:"2025-10-10",slips:400}] },
+      { community: "Les Cayes",      country: "Haiti",       lat: 18.1952, lon: -73.7508, farmerCount: 5,  slipCount: 1500,  latestDate: "2025-06-15", timeline: null },
+      { community: "Lilongwe",       country: "Malawi",      lat: -13.9626, lon: 33.7741, farmerCount: 15, slipCount: 4500,  latestDate: "2025-09-20",
+        timeline: [{date:"2025-04-10",slips:800},{date:"2025-06-15",slips:1200},{date:"2025-08-02",slips:1100},{date:"2025-09-20",slips:1400}] },
+      { community: "Zomba",          country: "Malawi",      lat: -15.3856, lon: 35.3188, farmerCount: 9,  slipCount: 2700,  latestDate: "2025-08-10",
+        timeline: [{date:"2025-06-01",slips:900},{date:"2025-07-10",slips:800},{date:"2025-08-10",slips:1000}] },
+      { community: "Blantyre",       country: "Malawi",      lat: -15.7861, lon: 35.0058, farmerCount: 11, slipCount: 3300,  latestDate: "2025-10-01",
+        timeline: [{date:"2025-07-01",slips:1100},{date:"2025-08-15",slips:1000},{date:"2025-10-01",slips:1200}] },
+      { community: "Mzuzu",          country: "Malawi",      lat: -11.4619, lon: 34.0216, farmerCount: 7,  slipCount: 2100,  latestDate: "2025-07-25", timeline: null },
+      { community: "Leyte",          country: "Philippines", lat: 10.4167, lon: 124.9500, farmerCount: 8,  slipCount: 2400,  latestDate: "2025-08-05",
+        timeline: [{date:"2025-05-20",slips:600},{date:"2025-06-25",slips:800},{date:"2025-07-15",slips:500},{date:"2025-08-05",slips:500}] },
+      { community: "Samar",          country: "Philippines", lat: 11.5898, lon: 124.9583, farmerCount: 6,  slipCount: 1800,  latestDate: "2025-09-15", timeline: null },
+      { community: "Cebu",           country: "Philippines", lat: 10.3157, lon: 123.8854, farmerCount: 10, slipCount: 3000,  latestDate: "2025-10-05",
+        timeline: [{date:"2025-07-10",slips:800},{date:"2025-08-20",slips:1000},{date:"2025-09-15",slips:700},{date:"2025-10-05",slips:500}] },
+      { community: "Abuja",          country: "Nigeria",     lat: 9.0579,  lon: 7.4951,   farmerCount: 14, slipCount: 4200,  latestDate: "2025-09-12",
+        timeline: [{date:"2025-05-01",slips:700},{date:"2025-06-10",slips:900},{date:"2025-07-20",slips:1100},{date:"2025-08-15",slips:800},{date:"2025-09-12",slips:700}] },
+      { community: "Jos",            country: "Nigeria",     lat: 9.8965,  lon: 8.8583,   farmerCount: 8,  slipCount: 2400,  latestDate: "2025-08-22",
+        timeline: [{date:"2025-06-10",slips:800},{date:"2025-07-18",slips:700},{date:"2025-08-22",slips:900}] },
+      { community: "Odisha",         country: "India",       lat: 20.9517, lon: 85.0985,  farmerCount: 20, slipCount: 6000,  latestDate: "2025-10-08",
+        timeline: [{date:"2025-04-05",slips:800},{date:"2025-05-20",slips:1000},{date:"2025-06-28",slips:1200},{date:"2025-08-10",slips:1400},{date:"2025-09-15",slips:900},{date:"2025-10-08",slips:700}] },
+      { community: "Jharkhand",      country: "India",       lat: 23.6102, lon: 85.2799,  farmerCount: 12, slipCount: 3600,  latestDate: "2025-09-28",
+        timeline: [{date:"2025-06-05",slips:800},{date:"2025-07-20",slips:1000},{date:"2025-08-25",slips:900},{date:"2025-09-28",slips:900}] },
+      { community: "Bihar",          country: "India",       lat: 25.0961, lon: 85.3131,  farmerCount: 9,  slipCount: 2700,  latestDate: "2025-08-18", timeline: null },
     ];
 
     // =========================================================
@@ -760,18 +776,25 @@
       const cMap = new Map();
       farmers.forEach(f => {
         const k = `${f.community}|${f.country}`;
-        if (!cMap.has(k)) cMap.set(k, { community: f.community, country: f.country, fc: 0, sc: 0, ld: f.date, lats: [], lons: [] });
+        if (!cMap.has(k)) cMap.set(k, { community: f.community, country: f.country, fc: 0, sc: 0, ld: f.date, lats: [], lons: [], byDate: new Map() });
         const e = cMap.get(k);
         e.fc++; e.sc += f.slips; e.lats.push(f.lat); e.lons.push(f.lon);
         if (f.date > e.ld) e.ld = f.date;
+        if (f.date) e.byDate.set(f.date, (e.byDate.get(f.date) || 0) + f.slips);
       });
 
-      return Array.from(cMap.values()).map(c => ({
-        community: c.community, country: c.country,
-        lat: c.lats.reduce((a,b) => a+b, 0) / c.lats.length,
-        lon: c.lons.reduce((a,b) => a+b, 0) / c.lons.length,
-        farmerCount: c.fc, slipCount: c.sc, latestDate: c.ld,
-      }));
+      return Array.from(cMap.values()).map(c => {
+        const timeline = Array.from(c.byDate.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([date, slips]) => ({ date, slips }));
+        return {
+          community: c.community, country: c.country,
+          lat: c.lats.reduce((a,b) => a+b, 0) / c.lats.length,
+          lon: c.lons.reduce((a,b) => a+b, 0) / c.lons.length,
+          farmerCount: c.fc, slipCount: c.sc, latestDate: c.ld,
+          timeline: timeline.length > 1 ? timeline : null,
+        };
+      });
     }
 
     // =========================================================
@@ -902,6 +925,34 @@
     }
 
     // =========================================================
+    // TIMELINE SPARKLINE (pure SVG)
+    // =========================================================
+    function timelineSVG(timeline, color) {
+      if (!timeline || timeline.length < 2) return '';
+      const W = 240, H = 48, padX = 4, padY = 6;
+      const n = timeline.length;
+      const maxSlips = Math.max(...timeline.map(t => t.slips));
+      if (maxSlips === 0) return '';
+      const pts = timeline.map((t, i) => ({
+        x: padX + (i / (n - 1)) * (W - 2 * padX),
+        y: padY + (1 - t.slips / maxSlips) * (H - 2 * padY),
+      }));
+      const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      const area = `${line} L${pts[n-1].x.toFixed(1)},${H} L${pts[0].x.toFixed(1)},${H} Z`;
+      const first = timeline[0].date.slice(5).replace('-', '/');
+      const last = timeline[n-1].date.slice(5).replace('-', '/');
+      return `<div class="popup-card__timeline">
+        <div class="popup-card__timeline-label">Distribution timeline</div>
+        <svg viewBox="0 0 ${W} ${H}" class="popup-card__timeline-svg">
+          <path d="${area}" fill="${color}" fill-opacity="0.12"/>
+          <path d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          ${pts.map((p, i) => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${i === n-1 ? 3.5 : 2.5}" fill="${color}" stroke="white" stroke-width="1.5"/>`).join('')}
+        </svg>
+        <div class="popup-card__timeline-dates"><span>${first}</span><span>${last}</span></div>
+      </div>`;
+    }
+
+    // =========================================================
     // POPUP HTML
     // =========================================================
     function popupHTML(d) {
@@ -909,6 +960,7 @@
       const flag = getFlag(d.country);
       const date = d.latestDate ? new Date(d.latestDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '--';
       const ago = relativeDate(d.latestDate);
+      const sparkline = timelineSVG(d.timeline, hex);
       return `<div class="popup-card">
         <div class="popup-card__header">
           <div class="popup-card__community">${escapeHtml(d.community)}</div>
@@ -918,6 +970,7 @@
           <div class="popup-card__stat"><div class="popup-card__stat-value" style="color:var(--gift-amber)">${d.farmerCount}</div><div class="popup-card__stat-label">Farmers</div></div>
           <div class="popup-card__stat"><div class="popup-card__stat-value" style="color:var(--gift-green)">${d.slipCount.toLocaleString()}</div><div class="popup-card__stat-label">Slips</div></div>
         </div>
+        ${sparkline}
         <div class="popup-card__footer">
           <span>${date} (${ago})</span>
           <a class="popup-card__zoom" onclick="zoomToCommunity('${escapeHtml(d.community)}','${escapeHtml(d.country)}')">Zoom in</a>
