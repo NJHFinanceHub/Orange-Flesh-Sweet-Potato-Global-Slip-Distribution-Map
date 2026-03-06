@@ -462,13 +462,41 @@
     }
     .error-banner--visible { display: block; }
 
+    /* BOTTOM SHEET HANDLE (hidden on desktop) */
+    .sidebar__handle { display: none; }
+
     /* RESPONSIVE */
     @media (max-width: 900px) {
-      .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       .sidebar {
-        max-height: 50vh; border-right: none;
-        border-bottom: 1px solid var(--gift-gray-100);
-        position: relative;
+        position: fixed; bottom: 0; left: 0; right: 0;
+        border-right: none; border-top: 1px solid var(--gift-gray-100);
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+        max-height: 70vh;
+        transform: translateX(0) translateY(0);
+        opacity: 1;
+        transition: max-height 0.35s var(--ease-out);
+        z-index: 1000;
+        overflow: hidden;
+      }
+      .app--visible .sidebar { transform: none; opacity: 1; }
+      /* Collapsed: only handle + stats + search visible */
+      .sidebar--collapsed { max-height: 200px; }
+      .sidebar--collapsed .sidebar__section--filters,
+      .sidebar--collapsed .sidebar__section--communities { display: none; }
+      .sidebar--collapsed .sidebar__footer { display: none; }
+      /* Expanded: scrollable content */
+      .sidebar--expanded { max-height: 70vh; overflow-y: auto; }
+      .sidebar__handle {
+        display: flex; align-items: center; justify-content: center;
+        padding: 8px 0 4px; cursor: grab; flex-shrink: 0;
+        -webkit-user-select: none; user-select: none;
+      }
+      .sidebar__handle:active { cursor: grabbing; }
+      .sidebar__handle-bar {
+        width: 36px; height: 4px; border-radius: 2px;
+        background: var(--gift-gray-300);
       }
       .sidebar__section { padding: var(--space-md); }
       .header__stats-bar { gap: var(--space-sm); }
@@ -476,9 +504,11 @@
       .header__stat-value { font-size: 1.15rem; }
       .header__title { font-size: 1.1rem; }
       .header__impact { display: none; }
-      .community-list { max-height: 120px; }
-      .map-legend { bottom: 20px; right: 8px; padding: 8px 12px; }
+      .community-list { max-height: none; overflow-y: auto; flex: 1; }
+      .map-legend { bottom: 210px; right: 8px; padding: 8px 12px; }
       .impact-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+      /* Map takes full height behind sheet */
+      .map-container { grid-row: 2; grid-column: 1; }
     }
     @media (max-width: 600px) {
       .header { flex-direction: column; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); }
@@ -539,7 +569,10 @@
     </header>
 
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar__section">
+      <div class="sidebar__handle" id="sheetHandle">
+        <div class="sidebar__handle-bar"></div>
+      </div>
+      <div class="sidebar__section sidebar__section--stats">
         <div class="impact-grid" id="impactGrid">
           <div class="impact-card">
             <div class="impact-card__icon" style="background:rgba(232,147,47,0.12);color:var(--gift-amber);">
@@ -585,14 +618,14 @@
           <input type="text" class="search-box__input" id="searchInput" placeholder="Search communities..." />
         </div>
       </div>
-      <div class="sidebar__section">
+      <div class="sidebar__section sidebar__section--filters">
         <h3 class="sidebar__heading">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           Countries
         </h3>
         <div class="filter-chips" id="countryFilters"></div>
       </div>
-      <div class="sidebar__section" style="flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column;">
+      <div class="sidebar__section sidebar__section--communities" style="flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column;">
         <h3 class="sidebar__heading">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           Communities
@@ -1016,6 +1049,9 @@
         buildCommunityList(allData.filter(d => activeCountries.has(d.country)).filter(d => !q || d.community.toLowerCase().includes(q) || d.country.toLowerCase().includes(q)));
       });
 
+      // Bottom sheet toggle for mobile
+      initBottomSheet();
+
       allData = await loadData();
 
       // Always reveal the app — even if data is empty
@@ -1034,6 +1070,80 @@
       renderMarkers(allData);
       buildLegend(allData);
       if (CONFIG.googleSheetUrl) document.getElementById('sheetLink').href = CONFIG.googleSheetUrl;
+    }
+
+    function initBottomSheet() {
+      const sidebar = document.getElementById('sidebar');
+      const handle = document.getElementById('sheetHandle');
+      const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+
+      function toggleSheet() {
+        if (!isMobile()) return;
+        const expanded = sidebar.classList.contains('sidebar--expanded');
+        sidebar.classList.toggle('sidebar--collapsed', expanded);
+        sidebar.classList.toggle('sidebar--expanded', !expanded);
+        setTimeout(() => map.invalidateSize(), 400);
+      }
+
+      // Set initial state on mobile
+      if (isMobile()) sidebar.classList.add('sidebar--collapsed');
+
+      // Tap/click on handle toggles
+      handle.addEventListener('click', toggleSheet);
+
+      // Touch drag on handle
+      let startY = 0, startHeight = 0, dragging = false, didDrag = false;
+      handle.addEventListener('touchstart', e => {
+        if (!isMobile()) return;
+        dragging = true;
+        didDrag = false;
+        startY = e.touches[0].clientY;
+        startHeight = sidebar.getBoundingClientRect().height;
+        sidebar.style.transition = 'none';
+        // Show hidden sections during drag so height calculation works
+        sidebar.classList.remove('sidebar--collapsed', 'sidebar--expanded');
+      }, { passive: true });
+
+      document.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        const dy = startY - e.touches[0].clientY;
+        if (Math.abs(dy) > 5) didDrag = true;
+        const newH = Math.max(100, Math.min(window.innerHeight * 0.7, startHeight + dy));
+        sidebar.style.maxHeight = newH + 'px';
+      }, { passive: true });
+
+      document.addEventListener('touchend', () => {
+        if (!dragging) return;
+        dragging = false;
+        sidebar.style.transition = '';
+        if (!didDrag) {
+          // Restore collapsed if no real drag happened (click handled separately)
+          sidebar.classList.add('sidebar--collapsed');
+          sidebar.style.maxHeight = '';
+          return;
+        }
+        const h = sidebar.getBoundingClientRect().height;
+        const threshold = window.innerHeight * 0.3;
+        if (h > threshold) {
+          sidebar.classList.remove('sidebar--collapsed');
+          sidebar.classList.add('sidebar--expanded');
+        } else {
+          sidebar.classList.remove('sidebar--expanded');
+          sidebar.classList.add('sidebar--collapsed');
+        }
+        sidebar.style.maxHeight = '';
+        setTimeout(() => map.invalidateSize(), 400);
+      });
+
+      // On desktop resize, remove mobile classes
+      window.addEventListener('resize', () => {
+        if (!isMobile()) {
+          sidebar.classList.remove('sidebar--collapsed', 'sidebar--expanded');
+          sidebar.style.maxHeight = '';
+        } else if (!sidebar.classList.contains('sidebar--expanded')) {
+          sidebar.classList.add('sidebar--collapsed');
+        }
+      });
     }
 
     function togglePresent() {
